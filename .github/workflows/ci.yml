@@ -166,6 +166,29 @@ jobs:
     - name: Check documentation for errors
       run: |
         SPHINXOPTS="-a -E -n -W --keep-going" make -C docs html
+    - name: Upload docs as Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: sdk/docs/build/html
+
+  sdk-docs-deploy:
+    # Publishes the docs built in sdk-docs to GitHub Pages (main branch only)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: sdk-docs
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   sdk-package:
     # This job checks if we can build our SDK package
